@@ -10,6 +10,7 @@ exports.handler = async function(event, context) {
       body: jsonData,
     };
   } catch (error) {
+    console.error("Error reading file:", error);
     return {
       statusCode: 500,
       body: JSON.stringify({ error: 'Failed to load data' }),
