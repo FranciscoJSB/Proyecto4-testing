@@ -24,11 +24,34 @@
 
   <script>
     function loadNetwork(network) {
-      d3.json(`/.netlify/functions/${network}`).then(data => {
-        visualizeNetwork(data);
-      }).catch(error => {
-        console.error('Error loading network:', error);
-      });
+      d3.json(`/.netlify/functions/${network}`)
+        .then(data => {
+          console.log("Data received:", data);
+          const formattedData = formatData(data);
+          if (formattedData) {
+            visualizeNetwork(formattedData);
+          } else {
+            console.error("Data format is incorrect.");
+          }
+        })
+        .catch(error => {
+          console.error('Error loading network:', error);
+        });
+    }
+
+    function formatData(data) {
+      if (data.nodes && data.edges) {
+        const nodes = data.nodes.map(node => ({
+          id: node.key,
+          ...node.attributes,
+        }));
+        const links = data.edges.map(edge => ({
+          source: edge.source,
+          target: edge.target,
+        }));
+        return { nodes, links };
+      }
+      return null;
     }
 
     function visualizeNetwork(graph) {
@@ -62,7 +85,7 @@
               .on("end", dragended));
 
       node.append("title")
-          .text(d => d.id);
+          .text(d => d.label);
 
       simulation
           .nodes(graph.nodes)
