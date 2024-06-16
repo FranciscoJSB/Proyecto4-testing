@@ -13,6 +13,17 @@
       stroke: #999;
       stroke-opacity: 0.6;
     }
+    .tooltip {
+      position: absolute;
+      text-align: center;
+      width: 120px;
+      padding: 5px;
+      font: 12px sans-serif;
+      background: lightsteelblue;
+      border: 1px solid #ccc;
+      border-radius: 3px;
+      pointer-events: none;
+    }
   </style>
 </head>
 <body>
@@ -23,6 +34,24 @@
   <svg width="960" height="600"></svg>
 
   <script>
+    const svg = d3.select("svg");
+    const width = +svg.attr("width");
+    const height = +svg.attr("height");
+
+    const tooltip = d3.select("body").append("div")
+      .attr("class", "tooltip")
+      .style("opacity", 0);
+
+    const zoomHandler = d3.zoom()
+      .scaleExtent([0.5, 5])
+      .on("zoom", zoomed);
+
+    svg.call(zoomHandler);
+
+    function zoomed(event) {
+      svg.selectAll('g').attr("transform", event.transform);
+    }
+
     function loadNetwork(network) {
       d3.json(`/.netlify/functions/${network}`)
         .then(data => {
@@ -55,55 +84,64 @@
     }
 
     function visualizeNetwork(graph) {
-      d3.select("svg").selectAll("*").remove();
-      const svg = d3.select("svg"),
-            width = +svg.attr("width"),
-            height = +svg.attr("height");
+      svg.selectAll("*").remove();
+
+      const g = svg.append("g");
 
       const simulation = d3.forceSimulation()
-          .force("link", d3.forceLink().id(d => d.id))
-          .force("charge", d3.forceManyBody().strength(-400))
-          .force("center", d3.forceCenter(width / 2, height / 2));
+        .force("link", d3.forceLink().id(d => d.id))
+        .force("charge", d3.forceManyBody().strength(-400))
+        .force("center", d3.forceCenter(width / 2, height / 2));
 
-      const link = svg.append("g")
-          .attr("class", "links")
+      const link = g.append("g")
+        .attr("class", "links")
         .selectAll("line")
         .data(graph.links)
         .enter().append("line")
-          .attr("class", "link");
+        .attr("class", "link");
 
-      const node = svg.append("g")
-          .attr("class", "nodes")
+      const node = g.append("g")
+        .attr("class", "nodes")
         .selectAll("circle")
         .data(graph.nodes)
         .enter().append("circle")
-          .attr("class", "node")
-          .attr("r", 5)
-          .call(d3.drag()
-              .on("start", dragstarted)
-              .on("drag", dragged)
-              .on("end", dragended));
+        .attr("class", "node")
+        .attr("r", 5)
+        .on("click", nodeClicked)
+        .call(d3.drag()
+          .on("start", dragstarted)
+          .on("drag", dragged)
+          .on("end", dragended));
 
       node.append("title")
-          .text(d => d.label);
+        .text(d => d.label);
 
       simulation
-          .nodes(graph.nodes)
-          .on("tick", ticked);
+        .nodes(graph.nodes)
+        .on("tick", ticked);
 
       simulation.force("link")
-          .links(graph.links);
+        .links(graph.links);
 
       function ticked() {
         link
-            .attr("x1", d => d.source.x)
-            .attr("y1", d => d.source.y)
-            .attr("x2", d => d.target.x)
-            .attr("y2", d => d.target.y);
+          .attr("x1", d => d.source.x)
+          .attr("y1", d => d.source.y)
+          .attr("x2", d => d.target.x)
+          .attr("y2", d => d.target.y);
 
         node
-            .attr("cx", d => d.x)
-            .attr("cy", d => d.y);
+          .attr("cx", d => d.x)
+          .attr("cy", d => d.y);
+      }
+
+      function nodeClicked(event, d) {
+        tooltip.transition()
+          .duration(200)
+          .style("opacity", .9);
+        tooltip.html(`ID: ${d.id}<br>Label: ${d.label}`)
+          .style("left", (event.pageX + 5) + "px")
+          .style("top", (event.pageY - 28) + "px");
       }
 
       function dragstarted(event, d) {
