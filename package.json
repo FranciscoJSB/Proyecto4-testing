@@ -1,16 +1,12 @@
 {
-  "name": "proyecto3_visualizacion",
+  "name": "network-visualization",
   "version": "1.0.0",
-  "description": "",
+  "description": "Network visualization using D3.js and Netlify functions",
   "main": "index.js",
   "scripts": {
-    "test": "echo \"Error: no test specified\" && exit 1"
+    "start": "netlify dev"
   },
-  "keywords": [],
-  "author": "",
-  "license": "ISC",
   "dependencies": {
-    "d3": "^7.9.0",
-    "node-fetch": "^3.3.2"
+    "express": "^4.17.1"
   }
 }
