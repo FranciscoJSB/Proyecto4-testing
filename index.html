@@ -26,6 +26,8 @@
     function loadNetwork(network) {
       d3.json(`/.netlify/functions/${network}`).then(data => {
         visualizeNetwork(data);
+      }).catch(error => {
+        console.error('Error loading network:', error);
       });
     }
 
