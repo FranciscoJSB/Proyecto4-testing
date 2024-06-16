@@ -3,7 +3,7 @@ const path = require('path');
 
 exports.handler = async function(event, context) {
   try {
-    const filePath = path.join(__dirname, 'diseases.json');
+    const filePath = path.resolve(__dirname, 'diseases.json');
     const jsonData = fs.readFileSync(filePath, 'utf-8');
     return {
       statusCode: 200,
