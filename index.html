@@ -5,6 +5,7 @@
   <title>Network Visualization</title>
   <script src="https://d3js.org/d3.v7.min.js"></script>
   <style>
+    /* Define styles for nodes, links and tooltips*/
     .node {
       stroke: #fff;
       stroke-width: 1.5px;
@@ -24,34 +25,72 @@
       border-radius: 3px;
       pointer-events: none;
     }
+
+    /* Estilos para los botones */
+    button {
+      background-color: #4CAF50;
+      border: none;
+      color: white;
+      padding: 10px 20px;
+      text-align: center;
+      text-decoration: none;
+      display: inline-block;
+      font-size: 16px;
+      margin: 5px 10px;
+      cursor: pointer;
+      border-radius: 5px;
+    }
+
+    button:hover {
+      background-color: #45a049;
+    }
+
+    button:active {
+      background-color: #3e8e41;
+    }
+
+    /* Estilos para el título */
+    h1 {
+      font-family: Arial, sans-serif;
+      color: #604CC3;
+      text-align: center;
+      margin-top: 20px;
+    }
   </style>
 </head>
 <body>
+  <!--- Create the page title and menu  -->
   <h1>Network Visualization</h1>
   <button onclick="loadNetwork('diseases')">Diseases Network</button>
   <button onclick="loadNetwork('eurosis')">Eurosis Network</button>
   <button onclick="loadNetwork('school')">School Network</button>
+  <!--- Create an SVG container where network will be displayed --->
   <svg width="960" height="600"></svg>
 
   <script>
+    // Select the SVG element and get its dimensions
     const svg = d3.select("svg");
     const width = +svg.attr("width");
     const height = +svg.attr("height");
 
+    // Create a div for the tooltip
     const tooltip = d3.select("body").append("div")
       .attr("class", "tooltip")
       .style("opacity", 0);
 
+    // Set the zoom and scroll within the svg
     const zoomHandler = d3.zoom()
       .scaleExtent([0.5, 5])
       .on("zoom", zoomed);
 
     svg.call(zoomHandler);
 
+    // Function that applies the zoom transform
     function zoomed(event) {
       svg.selectAll('g').attr("transform", event.transform);
     }
 
+    // Load JSON data from the server
     function loadNetwork(network) {
       d3.json(`/.netlify/functions/${network}`)
         .then(data => {
@@ -68,6 +107,7 @@
         });
     }
 
+    // Format data to be compatible with D3.js
     function formatData(data) {
       if (data.nodes && data.edges) {
         const nodes = data.nodes.map(node => ({
@@ -83,17 +123,21 @@
       return null;
     }
 
+    // Main function that creates the network display
     function visualizeNetwork(graph) {
+      // Removes all elements inside SVG
       svg.selectAll("*").remove();
-
+      // Create a new element 'g' (group) inside SVG and assign the variable 'g'
       const g = svg.append("g");
 
+      // Configure D3.js force simulation
       const simulation = d3.forceSimulation(graph.nodes)
         .force("link", d3.forceLink(graph.links).id(d => d.id).distance(50))
         .force("charge", d3.forceManyBody().strength(-100))
         .force("center", d3.forceCenter(width / 2, height / 2))
         .force("collision", d3.forceCollide().radius(10));
 
+      // Create and configure visual elements for links and nodes
       const link = g.append("g")
         .attr("class", "links")
         .selectAll("line")
@@ -119,6 +163,7 @@
 
       simulation.on("tick", ticked);
 
+      // Updates the position of nodes and links in each iteration of the simulation
       function ticked() {
         link
           .attr("x1", d => d.source.x)
@@ -131,6 +176,7 @@
           .attr("cy", d => d.y);
       }
 
+      // Displays the tooltip with node information when clicked
       function nodeClicked(event, d) {
         tooltip.transition()
           .duration(200)
@@ -140,6 +186,7 @@
           .style("top", (event.pageY - 28) + "px");
       }
 
+      // Functions to handle node dragging
       function dragstarted(event, d) {
         if (!event.active) simulation.alphaTarget(0.3).restart();
         d.fx = d.x;
